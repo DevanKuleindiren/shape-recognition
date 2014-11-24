@@ -1,0 +1,62 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="${relativePackage}.${activityClass}" >
+
+    <Button
+        android:id="@+id/trainButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="30dp"
+        android:background="#4D564D"
+        android:textColor="#FFFFFF"
+        android:text="Train" />
+
+    <Button
+        android:id="@+id/useNet"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="28dp"
+        android:textColor="#FFFFFF"
+        android:background="#19A347"
+        android:text="@string/useNet" />
+
+    <TextView
+        android:id="@+id/recordingsDisplay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="122dp"
+        android:layout_toLeftOf="@+id/resetButton"
+        android:gravity="center"
+        android:text="-" />
+
+    <Button
+        android:id="@+id/resetButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/recordingsDisplay"
+        android:layout_alignBottom="@+id/recordingsDisplay"
+        android:layout_alignParentRight="true"
+        android:text="Reset" />
+
+    <TextView
+        android:id="@+id/outputDisplay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/trainButton"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="92dp"
+        android:gravity="center"
+        android:textColor="#FF0000"
+        android:text="-" />
+
+</RelativeLayout>
