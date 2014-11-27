@@ -1,9 +1,5 @@
 package com.devankuleindiren.shapenet;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -24,27 +20,27 @@ import android.widget.Toast;
 public class MainActivity extends Activity implements SensorEventListener {
 	
 	//UI
-	Button resetButton;
-	Button useNetButton;
-	Button trainButton;
-	TextView accelerationNo;
-	TextView outputDisplay;
-	
-	static Thread thread;
+	private Button resetButton;
+	private Button useNetButton;
+	private Button trainButton;
+	private TextView accelerationNo;
+	private TextView outputDisplay;
+
+	private static Thread thread;
 	
 	//ACCELERATION
-	Sensor accelerometer;
-	SensorManager accelerometerManager;
-	double XAcceleration;
-	double ZAcceleration;
+	private Sensor accelerometer;
+	private SensorManager accelerometerManager;
+	private double XAcceleration;
+	private double ZAcceleration;
 	private static int noOfRecords = 10;
-	double[] XAccelerationSaved = new double[noOfRecords];
-	double[] ZAccelerationSaved = new double[noOfRecords];
+	private double[] XAccelerationSaved = new double[noOfRecords];
+	private double[] ZAccelerationSaved = new double[noOfRecords];
 	
 	//TRACKERS
-	static int accelerationCount = 0;
-	static int nextRecognitionCount = 0;
-	static boolean usingNet = false;
+	private static int accelerationCount = 0;
+	private static int nextRecognitionCount = 0;
+	private static boolean usingNet = false;
 	
 	//SAVING
 	private static String preferenceKey = "com.devankuleindiren.shapenet.netPref";
@@ -56,51 +52,29 @@ public class MainActivity extends Activity implements SensorEventListener {
 		
 		//INITIALISE WEIGHTS
 		DeepNet.initWeights();
-		/*BufferedReader reader = null;
-		try {
-		    reader = new BufferedReader(new InputStreamReader(getAssets().open("trainedWeights.txt")));
-		    int i = 0;
-		    for (String line = reader.readLine(); line != null; line = reader.readLine(), i++) {
-		    	String[] inputs = line.split("\\,");
-		    	if (i < DeepNet.inputNodesNo) {
-		    		for (int j = 0; j < DeepNet.hiddenNeuronNo; j++) DeepNet.weights1[i][j] = Double.parseDouble(inputs[j]);
-		    	} else {
-		    		for (int j = 0; j < DeepNet.outputNeuronNo; j++) DeepNet.weights2[i-DeepNet.inputNodesNo][j] = Double.parseDouble(inputs[j]);
-		    	}
-		    }
-		} catch (IOException e) {
-		    //log the exception
-		} finally {
-		    if (reader != null) {
-		         try {
-		             reader.close();
-		         } catch (IOException e) {
-		             //log the exception
-		         }
-		    }
-		}*/
-		//***
 		
-		//LOAD NET
+		//LOAD THE WEIGHTS OF THE LAST SAVED NEURAL NET
 		Context context = MainActivity.this;
 		SharedPreferences sharedPref = context.getSharedPreferences(
 		        preferenceKey, Context.MODE_PRIVATE);
-		Log.d("QX", "*1*");
-		for (int i = 0; i < DeepNet.inputNodesNo; i++) {
+		Log.d("QX", "* 1 *");
+		//LOAD THE WEIGHTS BETWEEN THE INPUTS AND HIDDEN LAYER
+		for (int i = 0; i < DeepNet.getInputNodesNo(); i++) {
 			String tempString = "";
-			for (int j = 0; j < DeepNet.hiddenNeuronNo; j++) {
-				DeepNet.weights1[i][j] = sharedPref.getFloat("weights1_" + Integer.toString(i) + Integer.toString(j), (float)DeepNet.weights1[i][j]);
-				tempString = tempString + Double.toString(DeepNet.weights1[i][j]) + ",";
+			for (int j = 0; j < DeepNet.getHiddenNeuronNo(); j++) {
+				DeepNet.setWeight1(i, j, sharedPref.getFloat("weights1_" + Integer.toString(i) + Integer.toString(j), (float)DeepNet.getWeight1(i, j)));
+				tempString = tempString + Double.toString(DeepNet.getWeight1(i, j)) + ",";
 			}
 			tempString = tempString.substring(0, tempString.length() - 1);
 			Log.d("QX", tempString);
 		}
-		Log.d("QX", "*2*");
-		for (int i = 0; i < (DeepNet.hiddenNeuronNo + 1); i++) {
+		Log.d("QX", "* 2 *");
+		//LOAD THE WEIGHTS BETWEEN THE INPUTS AND HIDDEN LAYER
+		for (int i = 0; i < (DeepNet.getHiddenNeuronNo() + 1); i++) {
 			String tempString = "";
-			for (int j = 0; j < DeepNet.outputNeuronNo; j++) {
-				DeepNet.weights2[i][j] = sharedPref.getFloat("weights2_" + Integer.toString(i) + Integer.toString(j), (float)DeepNet.weights2[i][j]);
-				tempString = tempString + Double.toString(DeepNet.weights2[i][j]) + ",";
+			for (int j = 0; j < DeepNet.getOutputNeuronNo(); j++) {
+				DeepNet.setWeight2(i, j, sharedPref.getFloat("weights2_" + Integer.toString(i) + Integer.toString(j), (float)DeepNet.getWeight2(i, j)));
+				tempString = tempString + Double.toString(DeepNet.getWeight2(i, j)) + ",";
 			}
 			tempString = tempString.substring(0, tempString.length() - 1);
 			Log.d("QX", tempString);
@@ -180,10 +154,12 @@ public class MainActivity extends Activity implements SensorEventListener {
 					    } 
 					});
 					
-					
+					//FEED THE ACCELERATION DATA THROUGH THE NET AT REGULAR INTERVALS (IF IT'S IN USE)
 					if (usingNet && nextRecognitionCount == 0) {
+						
+						//CREATE AN INPUT VECTOR FROM THE ACCELERATION DATA
 						double[][] currentOutput = new double[1][2];
-						double[][] currentInput = new double[1][DeepNet.inputNodesNo];
+						double[][] currentInput = new double[1][DeepNet.getInputNodesNo()];
 						for (int j = 0; j < noOfRecords; j++) {
 							currentInput[0][j] = ZAccelerationSaved[j];
 						}
@@ -191,9 +167,12 @@ public class MainActivity extends Activity implements SensorEventListener {
 							currentInput[0][j+noOfRecords] = XAccelerationSaved[j];
 						}
 						currentInput[0][noOfRecords*2] = -1;
+						
+						//FEED THIS INPUT VECTOR THROUGH THE NET
 						currentOutput = DeepNet.useNet(currentInput, 1.0);
 						currentOutput = DeepNet.rectifyActivations(currentOutput);
 						
+						//DISPLAYS 'NOTHING' IF THE FIRST OUTPUT NODE HAS THE GREATEST ACTIVATION
 						if (currentOutput[0][0] == 1.0) {
 							outputDisplay.post(new Runnable() {
 							    public void run() {
@@ -204,7 +183,9 @@ public class MainActivity extends Activity implements SensorEventListener {
 							    	}
 							    } 
 							});
-						} else if (currentOutput[0][1] == 1.0) {
+						}
+						//DISPLAYS 'CIRCLE' IF THE SECOND OUTPUT NODE HAS THE GREATEST ACTIVATION
+						else if (currentOutput[0][1] == 1.0) {
 							outputDisplay.post(new Runnable() {
 							    public void run() {
 							    	if (outputDisplay.getText() != "CIRCLE") {
@@ -232,6 +213,8 @@ public class MainActivity extends Activity implements SensorEventListener {
 
 	@Override
 	public void onSensorChanged(SensorEvent event) {
+		//UPDATES THE ACCELERATION IN THE X AND Z AXES
+		//Y AXIS NOT USED SINCE APP IS PRIMARILY DESIGNED FOR CIRCLE DETECTION IN THE X-Z PLANE
 		XAcceleration = event.values[0];
 		ZAcceleration = event.values[2];
 	}

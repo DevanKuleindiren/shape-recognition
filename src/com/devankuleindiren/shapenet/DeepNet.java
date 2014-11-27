@@ -5,20 +5,32 @@ import org.apache.commons.math3.linear.RealMatrix;
 
 import android.util.Log;
 
+/* THIS CLASS PROVIDES METHODS TO TRAIN AND USE THE NEURAL NETWORK */ 
 public class DeepNet {
 	
-	public static int inputNodesNo = 21;
-	public static int hiddenNeuronNo = 15;
-	public static int outputNeuronNo = 2;
-	/*
-	 * 1. None
-	 * 2. Circle
-	 */
+	//SPECIFY NUMBER OF NODES IN INPUT, HIDDEN AND OUTPUT LAYERS
+	private static int inputNodesNo = 21;
+	private static int hiddenNeuronNo = 15;
+	private static int outputNeuronNo = 2;
 	
-	static double weights1[][] = new double[inputNodesNo][hiddenNeuronNo];
-	static double weights2[][] = new double[hiddenNeuronNo+1][outputNeuronNo];
-
-	public static void fillRandom(double array[][], int noOfInputs) {
+	//GET METHODS FOR THESE NODES
+	static int getInputNodesNo () { return inputNodesNo; }
+	static int getHiddenNeuronNo () { return hiddenNeuronNo; }
+	static int getOutputNeuronNo () { return outputNeuronNo; }
+	
+	//2 DIMENSIONAL ARRAY FOR REPRESENTING THE WEIGHTS
+	private static double weights1[][] = new double[inputNodesNo][hiddenNeuronNo];
+	private static double weights2[][] = new double[hiddenNeuronNo+1][outputNeuronNo];
+	
+	//GET & SET METHODS FOR THESE WEIGHTS
+	static double getWeight1 (int i, int j) { return weights1[i][j]; }
+	static double getWeight2 (int i, int j) { return weights2[i][j]; }
+	static void setWeight1 (int i, int j, double newV) { weights1[i][j] = newV; }
+	static void setWeight2 (int i, int j, double newV) { weights2[i][j] = newV; }
+	
+	//INITIALISE EACH WEIGHT TO A RANDOM VALUE, X, IN THE RANGE -N^(-0.5) < X < N^(-0.5) 
+	// WHERE N IS THE NUMBER OF NODES IN THE LAYER BEFORE THE WEIGHTS
+	private static void fillRandom(double array[][], int noOfInputs) {
 		for (int i = 0; i < array.length; i++) {
 			for (int j = 0; j < array[0].length; j++) {
 				array[i][j] = (Math.random() * (2*(1/Math.pow(noOfInputs, 0.5)))) - (1/Math.pow(noOfInputs, 0.5));
@@ -26,6 +38,13 @@ public class DeepNet {
 		}
 	}
 	
+	//INITIALISE THE WEIGHT ARRAYS
+	public static void initWeights() {
+		fillRandom(weights1, inputNodesNo);
+		fillRandom(weights2, hiddenNeuronNo);	
+	}
+	
+	//SET THE GREATEST ACTIVATION TO 1 AND ALL OTHERS TO 0
 	public static double[][] rectifyActivations(double activations[][]) {
 		for (int i = 0; i < activations.length; i++) {
 			
@@ -44,23 +63,21 @@ public class DeepNet {
 		return activations;
 	}
 	
-	public static void initWeights() {
-		fillRandom(weights1, inputNodesNo);
-		fillRandom(weights2, hiddenNeuronNo);
-		
-	}
-	
+	//TRAIN THE NET USING GIVEN INPUTS & TARGETS, WITH A GIVEN LEARNING RATE, BETA VALUE AND NUMBER OF ITERATIONS
 	public static double trainNet(double inputVectors[][], double targets[][], double lR, double beta, int iterationNo) {
 		
 		double hiddenActs[][] = new double[inputVectors.length][hiddenNeuronNo + 1];
 		double outputActs[][] = new double[inputVectors.length][outputNeuronNo];
 		double error = 0;
 		
+		//ERROR TERMS FOR CHANGE IN OUTPUT WEIGHTS
 		double deltaO[][] = new double[inputVectors.length][outputNeuronNo];
+		//ERROR TERMS FOR CHANGE IN HIDDEN WEIGHTS
 		double deltaH[][] = new double[inputVectors.length][hiddenNeuronNo];
 		
 		Log.d("QX", "***");
 		for (int i = 0; i < iterationNo; i++) {
+			
 			//FEED FORWARD
 			hiddenActs = useNetP1(inputVectors, beta);
 			outputActs = useNetP2(hiddenActs, beta);
@@ -113,17 +130,21 @@ public class DeepNet {
 		return error;
 	}
 	
+	//PASS AN ARRAY OF INPUT VECTORS THROUGH THE NEURAL NET
 	public static double[][] useNet(double inputVectors[][], double beta) {
 		double hiddenActs[][] = new double[inputVectors.length][hiddenNeuronNo + 1];
 		double outputActs[][] = new double[inputVectors.length][outputNeuronNo];
 		
+		//INPUT NODES TO HIDDEN LAYER
 		hiddenActs = useNetP1(inputVectors, beta);
+		//HIDDEN LAYER TO OUTPUT LAYER
 		outputActs = useNetP2(hiddenActs, beta);
 		
 		return outputActs;
 	}
 	
-	public static double[][] useNetP1(double inputVectors[][], double beta) {
+	//COMPUTE THE ACTIVATIONS OF THE HIDDEN LAYER NODES GIVEN THE INPUT VECTORS
+	private static double[][] useNetP1(double inputVectors[][], double beta) {
 		
 		double hiddenActsInitial[][] = new double[inputVectors.length][hiddenNeuronNo];
 		double hiddenActs[][] = new double[inputVectors.length][hiddenNeuronNo + 1];
@@ -150,7 +171,8 @@ public class DeepNet {
 		return hiddenActs;
 	}
 	
-	public static double[][] useNetP2(double hiddenActs[][], double beta) {
+	//COMPUTE THE ACTIVATIONS OF THE OUTPUT LAYER NODES GIVEN THE HIDDEN LAYER ACTIVATIONS
+	private static double[][] useNetP2(double hiddenActs[][], double beta) {
 		double outputActs[][] = new double[hiddenActs.length][outputNeuronNo];
 		
 		RealMatrix hiddenActsM = MatrixUtils.createRealMatrix(hiddenActs);

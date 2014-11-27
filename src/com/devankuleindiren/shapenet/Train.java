@@ -17,34 +17,40 @@ import android.widget.Toast;
 
 public class Train extends Activity implements SensorEventListener {
 	
-	Button circleButton;
-	Button nothingButton;
-	Button saveButton;
-	TextView accelerationNo;
-	public static TextView errorDisplay;
+	//UI
+	private Button circleButton;
+	private Button nothingButton;
+	private Button saveButton;
+	private TextView accelerationNo;
+	private static TextView errorDisplay;
 	
-	Thread thread2;
+	private Thread thread2;
 	
 	//ACCELERATION
-	Sensor accelerometer;
-	SensorManager accelerometerManager;
-	double XAcceleration;
-	double ZAcceleration;
+	private Sensor accelerometer;
+	private SensorManager accelerometerManager;
+	private double XAcceleration;
+	private double ZAcceleration;
 	private static int noOfRecords = 10;
-	double[] XAccelerationSaved = new double[noOfRecords];
-	double[] ZAccelerationSaved = new double[noOfRecords];
+	private double[] XAccelerationSaved = new double[noOfRecords];
+	private double[] ZAccelerationSaved = new double[noOfRecords];
 	
-	static int accelerationCount = 0;
-	static int iVCount = 0;
+	//TRACKERS
+	private static int accelerationCount = 0;
+	private static int iVCount = 0;
 	
-	static int inputNo = 21;
-	static int iVNo = 100;
-	static int outputNo = 2;
-	static double betaValue = 1;
-	static double lR = 0.01;
+	//NUMBER OF INPUTS, INPUT VECTORS & OUTPUTS
+	private static int inputNo = DeepNet.getInputNodesNo();
+	private static int iVNo = 100;
+	private static int outputNo = 2;
 	
-	double[][] inputVectors = new double[iVNo][inputNo];
-	double[][] targets = new double[iVNo][outputNo];
+	//BETA VALUE AND LEARNING RATE FOR NEURAL NET
+	private static double betaValue = 1;
+	private static double lR = 0.01;
+	
+	//ARRAYS TO STORE INPUT VECTORS AND ASSOCIATED TARGETS
+	private double[][] inputVectors = new double[iVNo][inputNo];
+	private double[][] targets = new double[iVNo][outputNo];
 	
 	//SAVING
 	private static String preferenceKey = "com.devankuleindiren.shapenet.netPref";
@@ -104,6 +110,7 @@ public class Train extends Activity implements SensorEventListener {
 		nothingButton = (Button) findViewById(R.id.nothingButton);
 		saveButton = (Button) findViewById(R.id.saveButton);
 		
+		//ADD INPUT VECTOR ASSOCIATED WITH 'CIRCLE'
 		circleButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -112,6 +119,7 @@ public class Train extends Activity implements SensorEventListener {
 			}
 		});
 		
+		//ADD INPUT VECTOR ASSOCIATED WITH 'NOTHING'
 		nothingButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -120,6 +128,7 @@ public class Train extends Activity implements SensorEventListener {
 			}
 		});
 		
+		//SAVE THE WEIGHTS OF THE CURRENT NEURAL NETWORK
 		saveButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -127,14 +136,14 @@ public class Train extends Activity implements SensorEventListener {
 				SharedPreferences sharedPref = context.getSharedPreferences(
 				        preferenceKey, Context.MODE_PRIVATE);
 				SharedPreferences.Editor editor = sharedPref.edit();
-				for (int i = 0; i < DeepNet.inputNodesNo; i++) {
-					for (int j = 0; j < DeepNet.hiddenNeuronNo; j++) {
-						editor.putFloat("weights1_" + Integer.toString(i) + Integer.toString(j), (float)DeepNet.weights1[i][j]);
+				for (int i = 0; i < DeepNet.getInputNodesNo(); i++) {
+					for (int j = 0; j < DeepNet.getHiddenNeuronNo(); j++) {
+						editor.putFloat("weights1_" + Integer.toString(i) + Integer.toString(j), (float)DeepNet.getWeight1(i, j));
 					}
 				}
-				for (int i = 0; i < (DeepNet.hiddenNeuronNo + 1); i++) {
-					for (int j = 0; j < DeepNet.outputNeuronNo; j++) {
-						editor.putFloat("weights2_" + Integer.toString(i) + Integer.toString(j), (float)DeepNet.weights2[i][j]);
+				for (int i = 0; i < (DeepNet.getHiddenNeuronNo() + 1); i++) {
+					for (int j = 0; j < DeepNet.getOutputNeuronNo(); j++) {
+						editor.putFloat("weights2_" + Integer.toString(i) + Integer.toString(j), (float)DeepNet.getWeight2(i, j));
 					}
 				}
 			    editor.commit();
@@ -143,7 +152,10 @@ public class Train extends Activity implements SensorEventListener {
 		});
 	}
 	
-	public void addVector() {
+	//ADD THE CURRENT INPUT VECTOR TO THE BATCH OF INPUT VECTORS STORED
+	private void addVector() {
+		
+		//CREATE INPUT VECTOR
 		for (int i = 0; i < noOfRecords; i++) {
 			inputVectors[iVCount][i] = ZAccelerationSaved[i];
 		}
@@ -152,6 +164,7 @@ public class Train extends Activity implements SensorEventListener {
 		}
 		inputVectors[iVCount][noOfRecords*2] = -1;
 		
+		//IF THE BATCH OF INPUT VECTORS IS FULL, TRAIN THE NEURAL NETWORK ON THIS BATCH
 		if (iVCount < (iVNo - 1)) {
 			iVCount++;
 		} else {
@@ -170,7 +183,8 @@ public class Train extends Activity implements SensorEventListener {
 		}
 	}
 	
-	public void resetTargets() {
+	//RESETS TARGETS ARRAY
+	private void resetTargets() {
 		for (int i = 0; i < targets.length; i++) {
 			for (int j = 0; j < targets[0].length; j++) {
 				targets[i][j] = 0;
@@ -185,6 +199,8 @@ public class Train extends Activity implements SensorEventListener {
 
 	@Override
 	public void onSensorChanged(SensorEvent event) {
+		//UPDATES THE ACCELERATION IN THE X AND Z AXES
+		//Y AXIS NOT USED SINCE APP IS PRIMARILY DESIGNED FOR CIRCLE DETECTION IN THE X-Z PLANE
 		XAcceleration = event.values[0];
 		ZAcceleration = event.values[2];
 		
