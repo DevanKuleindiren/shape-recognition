@@ -1,4 +1,4 @@
-shape-recognition
+ShapeNet
 =================
 
 ##Demo
