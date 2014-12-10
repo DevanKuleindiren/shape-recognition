@@ -176,7 +176,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 						if (currentOutput[0][0] == 1.0) {
 							outputDisplay.post(new Runnable() {
 							    public void run() {
-							    	if (outputDisplay.getText() != "NOTHING") {
+							    	if (!(outputDisplay.getText().equals("NOTHING"))) {
 							    		outputDisplay.setTextColor(Color.parseColor("#0000FF")); 
 							    		outputDisplay.setText("NOTHING");
 									    nextRecognitionCount = 4;
@@ -188,7 +188,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 						else if (currentOutput[0][1] == 1.0) {
 							outputDisplay.post(new Runnable() {
 							    public void run() {
-							    	if (outputDisplay.getText() != "CIRCLE") {
+							    	if (!(outputDisplay.getText().equals("CIRCLE"))) {
 							    		outputDisplay.setTextColor(Color.parseColor("#FF0000"));
 							    		outputDisplay.setText("CIRCLE");
 								        nextRecognitionCount = 4;
