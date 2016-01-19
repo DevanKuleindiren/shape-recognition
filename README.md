@@ -7,4 +7,4 @@ ShapeNet
 alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
 
 ##Description
-ShapeNet is an android app that learns how to recognise when you move your phone in a circle. For more information, please visit: http://devankuleindiren.com/Projects/machine_learning.php
+ShapeNet is an android app that learns how to recognise when you move your phone in a circle.
